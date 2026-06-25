@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>天蝎INFJ桌宠</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+  :root {
+    --bg: rgba(255,255,255,0.12);
+    --bg-solid: #f5f5f7;
+    --text: #1d1d1f;
+    --text-soft: #666;
+    --accent: #c75b39;
+    --accent-soft: rgba(199,91,57,0.15);
+    --bubble-bg: rgba(255,255,255,0.85);
+    --shadow: rgba(0,0,0,0.08);
+    --pet-stroke: #2c2c2c;
+    --pet-fill: #f0e6d8;
+    --pet-accent: #c75b39;
+    --pet-eye: #1a1a1a;
+  }
+  [data-theme="dark"] {
+    --bg: rgba(30,30,35,0.25);
+    --bg-solid: #1e1e24;
+    --text: #f0f0f5;
+    --text-soft: #999;
+    --accent: #e07a5f;
+    --accent-soft: rgba(224,122,95,0.2);
+    --bubble-bg: rgba(40,40,48,0.9);
+    --shadow: rgba(0,0,0,0.25);
+    --pet-stroke: #e0e0e0;
+    --pet-fill: #d4c4b0;
+    --pet-accent: #e07a5f;
+    --pet-eye: #f0f0f5;
+  }
+  body {
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    background: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "PingFang SC", "Hiragino Sans GB", sans-serif;
+    cursor: default;
+  }
+
+  /* ===== 主容器 ===== */
+  #pet-container {
+    position: fixed;
+    top: 120px; left: 120px;
+    width: 180px; height: 220px;
+    cursor: grab;
+    z-index: 99999;
+    transition: transform 0.3s ease;
+  }
+  #pet-container:active { cursor: grabbing; }
+  #pet-container.dragging { transition: none; }
+
+  /* ===== 宠物SVG ===== */
+  #pet-svg {
+    width: 180px; height: 180px;
+    filter: drop-shadow(0 4px 12px var(--shadow));
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  #pet-svg .pet-body { fill: var(--pet-fill); stroke: var(--pet-stroke); stroke-width: 2.2; }
+  #pet-svg .pet-accent { fill: var(--pet-accent); }
+  #pet-svg .pet-eye { fill: var(--pet-eye); }
+  #pet-svg .pet-blush { fill: rgba(199,91,57,0.25); }
+  [data-theme="dark"] #pet-svg .pet-blush { fill: rgba(224,122,95,0.3); }
+  #pet-svg .pet-line { stroke: var(--pet-stroke); stroke-width: 1.8; fill: none; stroke-linecap: round; }
+
+  /* 动画状态 */
+  .anim-idle #pet-svg { animation: breathe 3s ease-in-out infinite; }
+  .anim-attention #pet-svg { animation: attention 0.6s ease-in-out; }
+  .anim-angry #pet-svg { transform: scaleX(-1); }
+  .anim-gentle #pet-svg { animation: gentleSway 2s ease-in-out infinite; }
+  .anim-block #pet-svg { animation: blockWiggle 1.5s ease-in-out infinite; }
+  .anim-sleep #pet-svg { animation: sleepBreath 4s ease-in-out infinite; }
+
+  @keyframes breathe {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.02) translateY(-2px); }
+  }
+  @keyframes attention {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.08) translateY(-6px); }
+    60% { transform: scale(0.97); }
+    100% { transform: scale(1); }
+  }
+  @keyframes gentleSway {
+    0%,100% { transform: rotate(0deg); }
+    25% { transform: rotate(3deg); }
+    75% { transform: rotate(-3deg); }
+  }
+  @keyframes blockWiggle {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-3px) rotate(-2deg); }
+    75% { transform: translateX(3px) rotate(2deg); }
+  }
+  @keyframes sleepBreath {
+    0%,100% { transform: scale(1) translateY(0); }
+    50% { transform: scale(1.01) translateY(-1px); }
+  }
+
+  /* 眨眼 */
+  .eye-lid { transform-origin: center; transition: transform 0.15s ease; }
+  .blink .eye-lid { transform: scaleY(0.1); }
+
+  /* ===== 气泡 ===== */
+  #bubble {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    transform-origin: bottom center;
+    background: var(--bubble-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 16px;
+    padding: 10px 16px;
+    max-width: 220px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    box-shadow: 0 4px 20px var(--shadow);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 10;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  #bubble.show {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  #bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid var(--bubble-bg);
+  }
+
+  /* ===== 菜单 ===== */
+  #menu-btn {
+    position: absolute;
+    top: -8px; right: -8px;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 20;
+  }
+  #pet-container:hover #menu-btn { opacity: 1; }
+  #menu-btn:hover { background: var(--accent); color: #fff; }
+
+  /* ===== 面板 ===== */
+  #panel {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%) scale(0.9);
+    width: 360px;
+    max-height: 80vh;
+    background: var(--bg-solid);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 100000;
+    overflow-y: auto;
+  }
+  #panel.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%,-50%) scale(1);
+  }
+  #panel h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #panel .close-btn {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent-soft);
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #panel .close-btn:hover { background: var(--accent); color: #fff; }
+
+  .section { margin-bottom: 20px; }
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(128,128,128,0.1);
+  }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-row span { font-size: 14px; color: var(--text); }
+  .switch {
+    width: 44px; height: 24px;
+    border-radius: 12px;
+    background: #ccc;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+  }
+  .switch.on { background: var(--accent); }
+  .switch::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    transition: left 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .switch.on::after { left: 22px; }
+
+  .todo-input {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .todo-input input {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(128,128,128,0.2);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    font-family: inherit;
+  }
+  .todo-input input:focus { border-color: var(--accent); }
+  .todo-input input::placeholder { color: var(--text-soft); opacity: 0.6; }
+  .todo-input button {
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .todo-input button:hover { opacity: 0.9; }
+
+  .todo-list { max-height: 140px; overflow-y: auto; }
+  .todo-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+    color: var(--text);
+    border-bottom: 1px solid rgba(128,128,128,0.08);
+  }
+  .todo-item:last-child { border-bottom: none; }
+  .todo-item .time { color: var(--accent); font-weight: 500; margin-right: 6px; }
+  .todo-item .del {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-soft);
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .todo-item .del:hover { background: rgba(255,0,0,0.1); color: #c00; }
+
+  .reminder-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .reminder-row input[type="number"] {
+    width: 50px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(128,128,128,0.2);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    text-align: center;
+    font-family: inherit;
+  }
+
+  /* ===== 提醒弹窗 ===== */
+  #reminder-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100001;
+  }
+  #reminder-overlay.show { display: flex; }
+  #reminder-box {
+    background: var(--bg-solid);
+    border-radius: 20px;
+    padding: 32px 28px;
+    width: 320px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn {
+    0% { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  #reminder-box h3 {
+    font-size: 18px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  #reminder-box p {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+  #reminder-box button {
+    padding: 10px 28px;
+    border-radius: 12px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* ===== 状态指示器 ===== */
+  #mood-dot {
+    position: absolute;
+    bottom: 4px; left: 50%;
+    transform: translateX(-50%);
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.6;
+    transition: background 0.3s ease;
+  }
+
+  /* 滚动条 */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div id="pet-container" class="anim-idle">
+  <button id="menu-btn">⚙</button>
+
+  <div id="bubble"></div>
+
+  <svg id="pet-svg" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+    <!-- 尾巴 -->
+    <path id="tail" class="pet-line" d="M 125 130 Q 155 110 150 80 Q 145 60 160 50" />
+    <!-- 身体 -->
+    <ellipse class="pet-body" cx="90" cy="115" rx="48" ry="42" />
+    <!-- 耳朵 -->
+    <path class="pet-body" d="M 52 75 L 45 45 L 72 62 Z" />
+    <path class="pet-body" d="M 128 75 L 135 45 L 108 62 Z" />
+    <!-- 耳内 -->
+    <path class="pet-accent" d="M 55 70 L 50 52 L 68 64 Z" opacity="0.6" />
+    <path class="pet-accent" d="M 125 70 L 130 52 L 112 64 Z" opacity="0.6" />
+    <!-- 头部 -->
+    <ellipse class="pet-body" cx="90" cy="78" rx="44" ry="38" />
+    <!-- 刘海/头发 -->
+    <path class="pet-accent" d="M 50 55 Q 70 48 90 52 Q 110 48 130 55 Q 120 40 90 38 Q 60 40 50 55" opacity="0.5" />
+    <!-- 眼睛 -->
+    <g id="eyes">
+      <ellipse class="pet-eye" cx="72" cy="76" rx="7" ry="8" />
+      <ellipse class="pet-eye" cx="108" cy="76" rx="7" ry="8" />
+      <!-- 高光 -->
+      <ellipse fill="#fff" opacity="0.7" cx="74" cy="73" rx="2.5" ry="3" />
+      <ellipse fill="#fff" opacity="0.7" cx="110" cy="73" rx="2.5" ry="3" />
+      <!-- 眼皮（眨眼用） -->
+      <rect id="lid-left" class="eye-lid" x="62" y="64" width="20" height="24" fill="var(--pet-fill)" rx="2" />
+      <rect id="lid-right" class="eye-lid" x="98" y="64" width="20" height="24" fill="var(--pet-fill)" rx="2" />
+    </g>
+    <!-- 腮红 -->
+    <ellipse class="pet-blush" cx="62" cy="88" rx="8" ry="5" opacity="0.6" />
+    <ellipse class="pet-blush" cx="118" cy="88" rx="8" ry="5" opacity="0.6" />
+    <!-- 嘴巴 -->
+    <path id="mouth" class="pet-line" d="M 84 92 Q 90 96 96 92" stroke-width="1.5" />
+    <!-- 手 -->
+    <ellipse class="pet-body" cx="58" cy="118" rx="10" ry="14" />
+    <ellipse class="pet-body" cx="122" cy="118" rx="10" ry="14" />
+    <!-- 脚 -->
+    <ellipse class="pet-body" cx="72" cy="152" rx="12" ry="8" />
+    <ellipse class="pet-body" cx="108" cy="152" rx="12" ry="8" />
+    <!-- 蝎子尾刺装饰 -->
+    <path class="pet-accent" d="M 150 80 Q 158 75 162 78 Q 160 82 155 82" fill="none" stroke-width="1.5" opacity="0.7" />
+  </svg>
+
+  <div id="mood-dot"></div>
+</div>
+
+<!-- 设置面板 -->
+<div id="panel">
+  <button class="close-btn" id="close-panel">✕</button>
+  <h2>⚙ 设置</h2>
+
+  <div class="section">
+    <div class="section-title">外观</div>
+    <div class="toggle-row">
+      <span>深色模式</span>
+      <div class="switch" id="theme-switch"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">健康提醒</div>
+    <div class="toggle-row">
+      <span>久坐护眼</span>
+      <div class="switch on" id="eye-switch"></div>
+    </div>
+    <div class="toggle-row">
+      <span>喝水提醒</span>
+      <div class="switch on" id="water-switch"></div>
+    </div>
+    <div class="toggle-row">
+      <span>熬夜提醒</span>
+      <div class="switch on" id="sleep-switch"></div>
+    </div>
+    <div class="reminder-row">
+      <span>护眼间隔</span>
+      <input type="number" id="eye-interval" value="45" min="10" max="180"> 分钟
+    </div>
+    <div class="reminder-row">
+      <span>喝水间隔</span>
+      <input type="number" id="water-interval" value="60" min="10" max="180"> 分钟
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">待办清单</div>
+    <div class="todo-input">
+      <input type="text" id="todo-text" placeholder="输入待办事项">
+      <input type="time" id="todo-time" value="09:00">
+      <button id="todo-add">添加</button>
+    </div>
+    <div class="todo-list" id="todo-list"></div>
+  </div>
+</div>
+
+<!-- 提醒弹窗 -->
+<div id="reminder-overlay">
+  <div id="reminder-box">
+    <h3 id="reminder-title">提醒</h3>
+    <p id="reminder-text"></p>
+    <button id="reminder-ok">知道了</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ===== 状态 =====
+  const state = {
+    mood: 'gentle', // gentle, stubborn, cold, empathetic
+    lastInteract: Date.now(),
+    eyeTimer: 0,
+    waterTimer: 0,
+    sleepWarned: false,
+    theme: 'light',
+    settings: {
+      eye: true,
+      water: true,
+      sleep: true,
+      eyeInterval: 45,
+      waterInterval: 60
+    },
+    todos: [],
+    dragging: false,
+    dragOffset: { x: 0, y: 0 },
+    mousePos: { x: 0, y: 0 },
+    petPos: { x: 120, y: 120 },
+    blockMode: false,
+    blockTarget: null,
+    idleTime: 0
+  };
+
+  // ===== DOM =====
+  const container = document.getElementById('pet-container');
+  const svg = document.getElementById('pet-svg');
+  const bubble = document.getElementById('bubble');
+  const menuBtn = document.getElementById('menu-btn');
+  const panel = document.getElementById('panel');
+  const closePanel = document.getElementById('close-panel');
+  const reminderOverlay = document.getElementById('reminder-overlay');
+  const reminderOk = document.getElementById('reminder-ok');
+  const todoList = document.getElementById('todo-list');
+  const themeSwitch = document.getElementById('theme-switch');
+  const eyeSwitch = document.getElementById('eye-switch');
+  const waterSwitch = document.getElementById('water-switch');
+  const sleepSwitch = document.getElementById('sleep-switch');
+  const eyeIntervalInput = document.getElementById('eye-interval');
+  const waterIntervalInput = document.getElementById('water-interval');
+  const todoText = document.getElementById('todo-text');
+  const todoTime = document.getElementById('todo-time');
+  const todoAdd = document.getElementById('todo-add');
+  const moodDot = document.getElementById('mood-dot');
+
+  // ===== 台词库 =====
+  const lines = {
+    gentle: [
+      "慢慢来，你已经做得很好了。",
+      "累了就歇一会儿，我陪着你。",
+      "今天的你，温柔又有力量。",
+      "不管发生什么，我都在。",
+      "你值得被好好对待，包括被你自己。"
+    ],
+    stubborn: [
+      "别盯屏幕了，眼睛不要了？",
+      "我说了多少遍，喝水！",
+      "你再这样下去，我可要生气了。",
+      "休息不是偷懒，是负责。",
+      "听我的，现在站起来。"
+    ],
+    cold: [
+      "……随便你。",
+      "我不说了，说了也没用。",
+      "你自己看着办吧。",
+      "（沉默）",
+      "嗯。"
+    ],
+    empathetic: [
+      "我懂你的不容易，真的。",
+      "那些没说出口的话，我都听见了。",
+      "你已经很努力了，别苛责自己。",
+      "有些情绪，不需要理由。",
+      "我在这里，不需要你做什么。"
+    ]
+  };
+
+  const reminderLines = {
+    eye: {
+      gentle: "眼睛累了？闭上眼，我数到三。",
+      stubborn: "四十五分钟了！现在！立刻！看远处！",
+      cold: "眼睛快瞎了，随你便。",
+      empathetic: "你的眼睛在偷偷求救呢，让它歇会儿吧。"
+    },
+    water: {
+      gentle: "该喝水啦，小口小口地，不急。",
+      stubborn: "一小时没喝水了，杯子拿来，现在喝。",
+      cold: "渴了别找我。",
+      empathetic: "身体在提醒你要喝水了，它在爱你呢。"
+    },
+    sleep: {
+      gentle: "很晚了，去睡吧，明天我陪你。",
+      stubborn: "都几点了！睡觉！立刻！",
+      cold: "熬夜随你，反正难受的是你。",
+      empathetic: "夜深了，你的大脑也需要被温柔地关掉。"
+    },
+    todo: {
+      gentle: "到时间了，该做这件事啦。",
+      stubborn: "闹钟响了！别拖了！",
+      cold: "……时间到了。",
+      empathetic: "这件事在等你，但它不会催你，我会。"
+    }
+  };
+
+  // ===== 工具函数 =====
+  function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function showBubble(text, duration = 3500) {
+    bubble.textContent = text;
+    bubble.classList.add('show');
+    clearTimeout(state._bubbleTimer);
+    state._bubbleTimer = setTimeout(() => bubble.classList.remove('show'), duration);
+  }
+  function setMood(m) {
+    state.mood = m;
+    const colors = { gentle: '#c75b39', stubborn: '#d4a017', cold: '#888', empathetic: '#5a8a6e' };
+    moodDot.style.background = colors[m] || colors.gentle;
+  }
+  function setAnim(name) {
+    container.className = '';
+    if (name) container.classList.add('anim-' + name);
+  }
+
+  // ===== 眨眼 =====
+  function blink() {
+    svg.classList.add('blink');
+    setTimeout(() => svg.classList.remove('blink'), 180);
+    scheduleBlink();
+  }
+  function scheduleBlink() {
+    clearTimeout(state._blinkTimer);
+    state._blinkTimer = setTimeout(blink, 2000 + Math.random() * 4000);
+  }
+  scheduleBlink();
+
+  // ===== 拖拽 =====
+  container.addEventListener('mousedown', e => {
+    if (e.target.closest('#menu-btn')) return;
+    state.dragging = true;
+    state.dragOffset.x = e.clientX - container.offsetLeft;
+    state.dragOffset.y = e.clientY - container.offsetTop;
+    container.classList.add('dragging');
+    setAnim(null);
+  });
+  document.addEventListener('mousemove', e => {
+    state.mousePos.x = e.clientX;
+    state.mousePos.y = e.clientY;
+    if (!state.dragging) return;
+    let x = e.clientX - state.dragOffset.x;
+    let y = e.clientY - state.dragOffset.y;
+    x = Math.max(0, Math.min(window.innerWidth - 180, x));
+    y = Math.max(0, Math.min(window.innerHeight - 220, y));
+    container.style.left = x + 'px';
+    container.style.top = y + 'px';
+    state.petPos = { x, y };
+    state.blockMode = false;
+  });
+  document.addEventListener('mouseup', () => {
+    if (!state.dragging) return;
+    state.dragging = false;
+    container.classList.remove('dragging');
+    setAnim('idle');
+    state.lastInteract = Date.now();
+    setMood('gentle');
+  });
+
+  // ===== 光标追踪 =====
+  document.addEventListener('mousemove', e => {
+    if (state.dragging) return;
+    const dx = e.clientX - (state.petPos.x + 90);
+    const dy = e.clientY - (state.petPos.y + 90);
+    const dist = Math.sqrt(dx*dx + dy*dy);
+
+    // 瞳孔跟随
+    const maxOff = 3;
+    const angle = Math.atan2(dy, dx);
+    const offX = Math.cos(angle) * Math.min(dist / 40, maxOff);
+    const offY = Math.sin(angle) * Math.min(dist / 40, maxOff);
+    const eyes = svg.querySelectorAll('#eyes .pet-eye');
+    eyes.forEach((eye, i) => {
+      const baseCx = i === 0 ? 72 : 108;
+      const baseCy = 76;
+      eye.setAttribute('cx', baseCx + offX);
+      eye.setAttribute('cy', baseCy + offY);
+    });
+
+    // 生气时背对（不追踪）
+    if (state.mood === 'cold') {
+      eyes.forEach((eye, i) => {
+        const baseCx = i === 0 ? 72 : 108;
+        eye.setAttribute('cx', baseCx);
+        eye.setAttribute('cy', 76);
+      });
+    }
+  });
+
+  // ===== 点击互动 =====
+  container.addEventListener('click', e => {
+    if (e.target.closest('#menu-btn')) return;
+    state.lastInteract = Date.now();
+
+    if (state.mood === 'cold') {
+      showBubble(rand(lines.cold), 2500);
+      setAnim('angry');
+      setTimeout(() => { if (!state.dragging) setAnim('idle'); }, 2000);
+      return;
+    }
+
+    // 随机互动
+    const r = Math.random();
+    if (r < 0.4) {
+      setMood('gentle');
+      setAnim('gentle');
+      showBubble(rand(lines.gentle));
+    } else if (r < 0.7) {
+      setMood('empathetic');
+      setAnim('attention');
+      showBubble(rand(lines.empathetic));
+    } else {
+      setMood('stubborn');
+      setAnim('attention');
+      showBubble(rand(lines.stubborn));
+    }
+    setTimeout(() => { if (!state.dragging) setAnim('idle'); }, 3000);
+  });
+
+  // ===== 菜单 =====
+  menuBtn.addEventListener('click', () => panel.classList.add('open'));
+  closePanel.addEventListener('click', () => panel.classList.remove('open'));
+  reminderOk.addEventListener('click', () => reminderOverlay.classList.remove('show'));
+
+  // ===== 开关 =====
+  function toggleSwitch(el, key) {
+    el.classList.toggle('on');
+    state.settings[key] = el.classList.contains('on');
+  }
+  themeSwitch.addEventListener('click', () => {
+    themeSwitch.classList.toggle('on');
+    const dark = themeSwitch.classList.contains('on');
+    state.theme = dark ? 'dark' : 'light';
+    document.body.setAttribute('data-theme', state.theme);
+  });
+  eyeSwitch.addEventListener('click', () => toggleSwitch(eyeSwitch, 'eye'));
+  waterSwitch.addEventListener('click', () => toggleSwitch(waterSwitch, 'water'));
+  sleepSwitch.addEventListener('click', () => toggleSwitch(sleepSwitch, 'sleep'));
+
+  eyeIntervalInput.addEventListener('change', () => {
+    state.settings.eyeInterval = parseInt(eyeIntervalInput.value) || 45;
+  });
+  waterIntervalInput.addEventListener('change', () => {
+    state.settings.waterInterval = parseInt(waterIntervalInput.value) || 60;
+  });
+
+  // ===== 待办 =====
+  function renderTodos() {
+    todoList.innerHTML = '';
+    state.todos.forEach((t, i) => {
+      const div = document.createElement('div');
+      div.className = 'todo-item';
+      div.innerHTML = `<span><span class="time">${t.time}</span>${t.text}</span><button class="del" data-i="${i}">✕</button>`;
+      todoList.appendChild(div);
+    });
+    todoList.querySelectorAll('.del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.todos.splice(parseInt(btn.dataset.i), 1);
+        renderTodos();
+      });
+    });
+  }
+  todoAdd.addEventListener('click', () => {
+    const text = todoText.value.trim();
+    const time = todoTime.value;
+    if (!text) return;
+    state.todos.push({ text, time, done: false });
+    todoText.value = '';
+    renderTodos();
+  });
+  todoText.addEventListener('keydown', e => { if (e.key === 'Enter') todoAdd.click(); });
+
+  // ===== 提醒系统 =====
+  function showReminder(type, customText) {
+    const titleEl = document.getElementById('reminder-title');
+    const textEl = document.getElementById('reminder-text');
+    const titles = { eye: '护眼提醒', water: '喝水提醒', sleep: '熬夜提醒', todo: '待办提醒' };
+    titleEl.textContent = titles[type] || '提醒';
+    if (customText) {
+      textEl.textContent = customText;
+    } else {
+      textEl.textContent = reminderLines[type][state.mood] || reminderLines[type].gentle;
+    }
+    reminderOverlay.classList.add('show');
+
+    // 弹窗时宠物反应
+    if (state.mood === 'cold') {
+      setAnim('angry');
+    } else if (state.mood === 'stubborn') {
+      setAnim('block');
+    } else {
+      setAnim('attention');
+    }
+    setTimeout(() => { if (!state.dragging) setAnim('idle'); }, 4000);
+  }
+
+  // 计时器循环
+  let lastTick = Date.now();
+  setInterval(() => {
+    const now = Date.now();
+    const dt = (now - lastTick) / 1000;
+    lastTick = now;
+
+    // 护眼计时
+    if (state.settings.eye) {
+      state.eyeTimer += dt;
+      if (state.eyeTimer >= state.settings.eyeInterval * 60) {
+        state.eyeTimer = 0;
+        setMood('stubborn');
+        showReminder('eye');
+      }
+    }
+
+    // 喝水计时
+    if (state.settings.water) {
+      state.waterTimer += dt;
+      if (state.waterTimer >= state.settings.waterInterval * 60) {
+        state.waterTimer = 0;
+        setMood('stubborn');
+        showReminder('water');
+      }
+    }
+
+    // 熬夜检测 (23:00 后)
+    const h = new Date().getHours();
+    if (state.settings.sleep && h >= 23 && !state.sleepWarned) {
+      state.sleepWarned = true;
+      setMood('stubborn');
+      showReminder('sleep');
+    }
+    if (h < 23) state.sleepWarned = false;
+
+    // 待办检测
+    const nowStr = ('0' + h).slice(-2) + ':' + ('0' + new Date().getMinutes()).slice(-2);
+    state.todos.forEach((t, i) => {
+      if (!t.done && t.time === nowStr) {
+        t.done = true;
+        setMood('stubborn');
+        showReminder('todo', `「${t.text}」到时间了。`);
+        renderTodos();
+      }
+    });
+
+    // 情绪衰减
+    state.idleTime += dt;
+    if (state.idleTime > 300) { // 5分钟无互动变冷淡
+      if (state.mood !== 'cold') {
+        setMood('cold');
+        setAnim('angry');
+        showBubble(rand(lines.cold), 3000);
+      }
+    }
+
+    // 长时间不动时偶尔说话
+    if (state.idleTime > 60 && Math.random() < 0.003) {
+      const pool = state.mood === 'cold' ? lines.cold :
+                   state.mood === 'stubborn' ? lines.stubborn :
+                   state.mood === 'empathetic' ? lines.empathetic : lines.gentle;
+      showBubble(rand(pool));
+    }
+
+  }, 1000);
+
+  // 重置idle
+  document.addEventListener('mousemove', () => {
+    if (state.idleTime > 300 && state.mood === 'cold') {
+      setMood('gentle');
+      setAnim('gentle');
+      showBubble("……你回来了。");
+      setTimeout(() => { if (!state.dragging) setAnim('idle'); }, 3000);
+    }
+    state.idleTime = 0;
+  });
+  document.addEventListener('keydown', () => { state.idleTime = 0; });
+  document.addEventListener('click', () => { state.idleTime = 0; });
+
+  // ===== 初始化 =====
+  setAnim('idle');
+  setMood('gentle');
+  showBubble("嗨，我是你的天蝎INFJ桌宠。");
+
+  // 检测系统深色模式
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    themeSwitch.classList.add('on');
+    document.body.setAttribute('data-theme', 'dark');
+    state.theme = 'dark';
+  }
+
+})();
+</script>
+</body>
+</html>
