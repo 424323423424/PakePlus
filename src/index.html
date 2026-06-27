@@ -1,910 +1,848 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>天蝎INFJ桌宠</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-  :root {
-    --bg: rgba(255,255,255,0.12);
-    --bg-solid: #f5f5f7;
-    --text: #1d1d1f;
-    --text-soft: #666;
-    --accent: #c75b39;
-    --accent-soft: rgba(199,91,57,0.15);
-    --bubble-bg: rgba(255,255,255,0.85);
-    --shadow: rgba(0,0,0,0.08);
-    --pet-stroke: #2c2c2c;
-    --pet-fill: #f0e6d8;
-    --pet-accent: #c75b39;
-    --pet-eye: #1a1a1a;
-  }
-  [data-theme="dark"] {
-    --bg: rgba(30,30,35,0.25);
-    --bg-solid: #1e1e24;
-    --text: #f0f0f5;
-    --text-soft: #999;
-    --accent: #e07a5f;
-    --accent-soft: rgba(224,122,95,0.2);
-    --bubble-bg: rgba(40,40,48,0.9);
-    --shadow: rgba(0,0,0,0.25);
-    --pet-stroke: #e0e0e0;
-    --pet-fill: #d4c4b0;
-    --pet-accent: #e07a5f;
-    --pet-eye: #f0f0f5;
-  }
-  body {
-    width: 100vw; height: 100vh;
-    overflow: hidden;
-    background: transparent;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "PingFang SC", "Hiragino Sans GB", sans-serif;
-    cursor: default;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天蝎座INFJ桌宠</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  /* ===== 主容器 ===== */
-  #pet-container {
-    position: fixed;
-    top: 120px; left: 120px;
-    width: 180px; height: 220px;
-    cursor: grab;
-    z-index: 99999;
-    transition: transform 0.3s ease;
-  }
-  #pet-container:active { cursor: grabbing; }
-  #pet-container.dragging { transition: none; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0);
+      overflow: hidden;
+      pointer-events: none;
+      user-select: none;
+    }
 
-  /* ===== 宠物SVG ===== */
-  #pet-svg {
-    width: 180px; height: 180px;
-    filter: drop-shadow(0 4px 12px var(--shadow));
-    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  #pet-svg .pet-body { fill: var(--pet-fill); stroke: var(--pet-stroke); stroke-width: 2.2; }
-  #pet-svg .pet-accent { fill: var(--pet-accent); }
-  #pet-svg .pet-eye { fill: var(--pet-eye); }
-  #pet-svg .pet-blush { fill: rgba(199,91,57,0.25); }
-  [data-theme="dark"] #pet-svg .pet-blush { fill: rgba(224,122,95,0.3); }
-  #pet-svg .pet-line { stroke: var(--pet-stroke); stroke-width: 1.8; fill: none; stroke-linecap: round; }
+    /* 桌宠容器 */
+    #pet-container {
+      position: fixed;
+      z-index: 99999;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: transform 0.1s ease-out;
+    }
 
-  /* 动画状态 */
-  .anim-idle #pet-svg { animation: breathe 3s ease-in-out infinite; }
-  .anim-attention #pet-svg { animation: attention 0.6s ease-in-out; }
-  .anim-angry #pet-svg { transform: scaleX(-1); }
-  .anim-gentle #pet-svg { animation: gentleSway 2s ease-in-out infinite; }
-  .anim-block #pet-svg { animation: blockWiggle 1.5s ease-in-out infinite; }
-  .anim-sleep #pet-svg { animation: sleepBreath 4s ease-in-out infinite; }
+    /* 桌宠主体 - 可爱的绿老头形象 */
+    #pet {
+      width: 120px;
+      height: 120px;
+      position: relative;
+    }
 
-  @keyframes breathe {
-    0%,100% { transform: scale(1); }
-    50% { transform: scale(1.02) translateY(-2px); }
-  }
-  @keyframes attention {
-    0% { transform: scale(1); }
-    30% { transform: scale(1.08) translateY(-6px); }
-    60% { transform: scale(0.97); }
-    100% { transform: scale(1); }
-  }
-  @keyframes gentleSway {
-    0%,100% { transform: rotate(0deg); }
-    25% { transform: rotate(3deg); }
-    75% { transform: rotate(-3deg); }
-  }
-  @keyframes blockWiggle {
-    0%,100% { transform: translateX(0); }
-    25% { transform: translateX(-3px) rotate(-2deg); }
-    75% { transform: translateX(3px) rotate(2deg); }
-  }
-  @keyframes sleepBreath {
-    0%,100% { transform: scale(1) translateY(0); }
-    50% { transform: scale(1.01) translateY(-1px); }
-  }
+    .pet-body {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #4a6741 0%, #3d5a34 50%, #2d4228 100%);
+      border-radius: 50% 50% 45% 45%;
+      position: relative;
+      box-shadow:
+        inset -8px -8px 20px rgba(0,0,0,0.3),
+        inset 5px 5px 15px rgba(120,180,100,0.2),
+        0 4px 8px rgba(0,0,0,0.2);
+    }
 
-  /* 眨眼 */
-  .eye-lid { transform-origin: center; transition: transform 0.15s ease; }
-  .blink .eye-lid { transform: scaleY(0.1); }
+    /* 耳朵 */
+    .ear {
+      position: absolute;
+      width: 25px;
+      height: 35px;
+      background: linear-gradient(135deg, #4a6741 0%, #3d5a34 100%);
+      border-radius: 50% 50% 40% 40%;
+      top: -15px;
+    }
+    .ear-left { left: 15px; transform: rotate(-15deg); }
+    .ear-right { right: 15px; transform: rotate(15deg); }
+    .ear-inner {
+      position: absolute;
+      width: 12px;
+      height: 18px;
+      background: rgba(200,180,160,0.4);
+      border-radius: 50%;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
 
-  /* ===== 气泡 ===== */
-  #bubble {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%) scale(0);
-    transform-origin: bottom center;
-    background: var(--bubble-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 16px;
-    padding: 10px 16px;
-    max-width: 220px;
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--text);
-    box-shadow: 0 4px 20px var(--shadow);
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-    z-index: 10;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  #bubble.show {
-    opacity: 1;
-    transform: translateX(-50%) scale(1);
-  }
-  #bubble::after {
-    content: '';
-    position: absolute;
-    bottom: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0; height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 6px solid var(--bubble-bg);
-  }
+    /* 眼睛 */
+    .eyes {
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+    }
+    .eye {
+      width: 18px;
+      height: 22px;
+      background: #1a1a1a;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+    }
+    .eye-highlight {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
+      top: 4px;
+      left: 4px;
+    }
+    .eye-pupil {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #2d1810;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
 
-  /* ===== 菜单 ===== */
-  #menu-btn {
-    position: absolute;
-    top: -8px; right: -8px;
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    background: var(--accent-soft);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    color: var(--accent);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    z-index: 20;
-  }
-  #pet-container:hover #menu-btn { opacity: 1; }
-  #menu-btn:hover { background: var(--accent); color: #fff; }
+    /* 眨眼动画 */
+    .eye-closed {
+      height: 3px !important;
+      top: 50% !important;
+      border-radius: 10px !important;
+    }
 
-  /* ===== 面板 ===== */
-  #panel {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%,-50%) scale(0.9);
-    width: 360px;
-    max-height: 80vh;
-    background: var(--bg-solid);
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    padding: 24px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-    z-index: 100000;
-    overflow-y: auto;
-  }
-  #panel.open {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translate(-50%,-50%) scale(1);
-  }
-  #panel h2 {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  #panel .close-btn {
-    position: absolute;
-    top: 16px; right: 16px;
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    border: none;
-    background: var(--accent-soft);
-    color: var(--accent);
-    cursor: pointer;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  #panel .close-btn:hover { background: var(--accent); color: #fff; }
+    /* 鼻子 */
+    .nose {
+      position: absolute;
+      width: 12px;
+      height: 8px;
+      background: #2d3a28;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translateX(-50%);
+    }
 
-  .section { margin-bottom: 20px; }
-  .section-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-soft);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 10px;
-  }
+    /* 嘴巴 */
+    .mouth {
+      position: absolute;
+      width: 20px;
+      height: 8px;
+      border-bottom: 3px solid #2d3a28;
+      border-radius: 0 0 50% 50%;
+      top: 58%;
+      left: 50%;
+      transform: translateX(-50%);
+    }
 
-  .toggle-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(128,128,128,0.1);
-  }
-  .toggle-row:last-child { border-bottom: none; }
-  .toggle-row span { font-size: 14px; color: var(--text); }
-  .switch {
-    width: 44px; height: 24px;
-    border-radius: 12px;
-    background: #ccc;
-    position: relative;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    flex-shrink: 0;
-  }
-  .switch.on { background: var(--accent); }
-  .switch::after {
-    content: '';
-    position: absolute;
-    top: 2px; left: 2px;
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    background: #fff;
-    transition: left 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  }
-  .switch.on::after { left: 22px; }
+    /* 腮红 */
+    .blush {
+      position: absolute;
+      width: 18px;
+      height: 10px;
+      background: rgba(200,120,120,0.3);
+      border-radius: 50%;
+      top: 50%;
+    }
+    .blush-left { left: 8px; }
+    .blush-right { right: 8px; }
 
-  .todo-input {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  .todo-input input {
-    flex: 1;
-    padding: 8px 12px;
-    border-radius: 10px;
-    border: 1px solid rgba(128,128,128,0.2);
-    background: var(--bg);
-    color: var(--text);
-    font-size: 14px;
-    outline: none;
-    font-family: inherit;
-  }
-  .todo-input input:focus { border-color: var(--accent); }
-  .todo-input input::placeholder { color: var(--text-soft); opacity: 0.6; }
-  .todo-input button {
-    padding: 8px 14px;
-    border-radius: 10px;
-    border: none;
-    background: var(--accent);
-    color: #fff;
-    font-size: 13px;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .todo-input button:hover { opacity: 0.9; }
+    /* 尾巴 */
+    .tail {
+      position: absolute;
+      width: 40px;
+      height: 15px;
+      background: linear-gradient(90deg, #3d5a34, #4a6741);
+      border-radius: 20px;
+      bottom: 20px;
+      right: -25px;
+      transform-origin: left center;
+      animation: tail-wag 2s ease-in-out infinite;
+    }
+    .tail::after {
+      content: '';
+      position: absolute;
+      width: 15px;
+      height: 12px;
+      background: #4a6741;
+      border-radius: 50%;
+      right: -5px;
+      top: -2px;
+    }
 
-  .todo-list { max-height: 140px; overflow-y: auto; }
-  .todo-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 0;
-    font-size: 13px;
-    color: var(--text);
-    border-bottom: 1px solid rgba(128,128,128,0.08);
-  }
-  .todo-item:last-child { border-bottom: none; }
-  .todo-item .time { color: var(--accent); font-weight: 500; margin-right: 6px; }
-  .todo-item .del {
-    width: 18px; height: 18px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: var(--text-soft);
-    cursor: pointer;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .todo-item .del:hover { background: rgba(255,0,0,0.1); color: #c00; }
+    @keyframes tail-wag {
+      0%, 100% { transform: rotate(-10deg); }
+      50% { transform: rotate(10deg); }
+    }
 
-  .reminder-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 0;
-    font-size: 13px;
-    color: var(--text);
-  }
-  .reminder-row input[type="number"] {
-    width: 50px;
-    padding: 4px 6px;
-    border-radius: 6px;
-    border: 1px solid rgba(128,128,128,0.2);
-    background: var(--bg);
-    color: var(--text);
-    font-size: 13px;
-    text-align: center;
-    font-family: inherit;
-  }
+    /* 脚 */
+    .feet {
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 30px;
+    }
+    .foot {
+      width: 25px;
+      height: 15px;
+      background: #3d5a34;
+      border-radius: 50%;
+    }
 
-  /* ===== 提醒弹窗 ===== */
-  #reminder-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.35);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 100001;
-  }
-  #reminder-overlay.show { display: flex; }
-  #reminder-box {
-    background: var(--bg-solid);
-    border-radius: 20px;
-    padding: 32px 28px;
-    width: 320px;
-    text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  @keyframes popIn {
-    0% { transform: scale(0.7); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-  #reminder-box h3 {
-    font-size: 18px;
-    color: var(--accent);
-    margin-bottom: 12px;
-    font-weight: 600;
-  }
-  #reminder-box p {
-    font-size: 14px;
-    color: var(--text);
-    line-height: 1.7;
-    margin-bottom: 20px;
-  }
-  #reminder-box button {
-    padding: 10px 28px;
-    border-radius: 12px;
-    border: none;
-    background: var(--accent);
-    color: #fff;
-    font-size: 14px;
-    cursor: pointer;
-    font-family: inherit;
-  }
+    /* 对话气泡 */
+    #speech-bubble {
+      position: fixed;
+      z-index: 99998;
+      background: rgba(255,255,255,0.95);
+      border-radius: 15px;
+      padding: 12px 16px;
+      max-width: 200px;
+      font-size: 13px;
+      color: #333;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+      opacity: 0;
+      transform: scale(0.8);
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      line-height: 1.5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    #speech-bubble.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+    #speech-bubble::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: rgba(255,255,255,0.95);
+      transform: rotate(45deg);
+      bottom: -6px;
+      left: 50%;
+      margin-left: -6px;
+    }
 
-  /* ===== 状态指示器 ===== */
-  #mood-dot {
-    position: absolute;
-    bottom: 4px; left: 50%;
-    transform: translateX(-50%);
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    opacity: 0.6;
-    transition: background 0.3s ease;
-  }
+    /* 控制面板 */
+    #control-panel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100000;
+      pointer-events: auto;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
 
-  /* 滚动条 */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 2px; }
-</style>
+    #toggle-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4a6741, #3d5a34);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      color: white;
+      font-size: 20px;
+      transition: transform 0.2s;
+    }
+    #toggle-btn:hover {
+      transform: scale(1.1);
+    }
+
+    #menu {
+      display: none;
+      position: absolute;
+      bottom: 60px;
+      right: 0;
+      background: rgba(255,255,255,0.98);
+      border-radius: 12px;
+      padding: 15px;
+      min-width: 220px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+    #menu.show { display: block; }
+
+    .menu-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #3d5a34;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .menu-section {
+      margin-bottom: 15px;
+    }
+    .menu-section label {
+      display: block;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .todo-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .todo-input:focus {
+      border-color: #4a6741;
+    }
+
+    .time-input {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .time-input input {
+      flex: 1;
+      padding: 6px 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .add-btn {
+      width: 100%;
+      padding: 8px;
+      background: linear-gradient(135deg, #4a6741, #3d5a34);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+    .add-btn:hover { opacity: 0.9; }
+
+    .todo-list {
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    .todo-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 8px;
+      background: #f8f8f8;
+      border-radius: 4px;
+      margin-top: 6px;
+      font-size: 11px;
+    }
+    .todo-item span {
+      flex: 1;
+      color: #444;
+    }
+    .todo-delete {
+      background: none;
+      border: none;
+      color: #999;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0 4px;
+    }
+    .todo-delete:hover { color: #c44; }
+
+    .stats {
+      font-size: 11px;
+      color: #888;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+    }
+    .stats div {
+      margin: 4px 0;
+    }
+
+    /* 背对屏幕状态 */
+    .pet-body.angry {
+      transform: scaleX(-1);
+    }
+
+    /* 行走动画 */
+    #pet-container.walking .pet-body {
+      animation: walk 0.3s ease-in-out infinite;
+    }
+    @keyframes walk {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    /* 转圈动画 */
+    #pet-container.circling {
+      animation: circle 1s linear infinite;
+    }
+    @keyframes circle {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
-
-<div id="pet-container" class="anim-idle">
-  <button id="menu-btn">⚙</button>
-
-  <div id="bubble"></div>
-
-  <svg id="pet-svg" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
-    <!-- 尾巴 -->
-    <path id="tail" class="pet-line" d="M 125 130 Q 155 110 150 80 Q 145 60 160 50" />
-    <!-- 身体 -->
-    <ellipse class="pet-body" cx="90" cy="115" rx="48" ry="42" />
-    <!-- 耳朵 -->
-    <path class="pet-body" d="M 52 75 L 45 45 L 72 62 Z" />
-    <path class="pet-body" d="M 128 75 L 135 45 L 108 62 Z" />
-    <!-- 耳内 -->
-    <path class="pet-accent" d="M 55 70 L 50 52 L 68 64 Z" opacity="0.6" />
-    <path class="pet-accent" d="M 125 70 L 130 52 L 112 64 Z" opacity="0.6" />
-    <!-- 头部 -->
-    <ellipse class="pet-body" cx="90" cy="78" rx="44" ry="38" />
-    <!-- 刘海/头发 -->
-    <path class="pet-accent" d="M 50 55 Q 70 48 90 52 Q 110 48 130 55 Q 120 40 90 38 Q 60 40 50 55" opacity="0.5" />
-    <!-- 眼睛 -->
-    <g id="eyes">
-      <ellipse class="pet-eye" cx="72" cy="76" rx="7" ry="8" />
-      <ellipse class="pet-eye" cx="108" cy="76" rx="7" ry="8" />
-      <!-- 高光 -->
-      <ellipse fill="#fff" opacity="0.7" cx="74" cy="73" rx="2.5" ry="3" />
-      <ellipse fill="#fff" opacity="0.7" cx="110" cy="73" rx="2.5" ry="3" />
-      <!-- 眼皮（眨眼用） -->
-      <rect id="lid-left" class="eye-lid" x="62" y="64" width="20" height="24" fill="var(--pet-fill)" rx="2" />
-      <rect id="lid-right" class="eye-lid" x="98" y="64" width="20" height="24" fill="var(--pet-fill)" rx="2" />
-    </g>
-    <!-- 腮红 -->
-    <ellipse class="pet-blush" cx="62" cy="88" rx="8" ry="5" opacity="0.6" />
-    <ellipse class="pet-blush" cx="118" cy="88" rx="8" ry="5" opacity="0.6" />
-    <!-- 嘴巴 -->
-    <path id="mouth" class="pet-line" d="M 84 92 Q 90 96 96 92" stroke-width="1.5" />
-    <!-- 手 -->
-    <ellipse class="pet-body" cx="58" cy="118" rx="10" ry="14" />
-    <ellipse class="pet-body" cx="122" cy="118" rx="10" ry="14" />
-    <!-- 脚 -->
-    <ellipse class="pet-body" cx="72" cy="152" rx="12" ry="8" />
-    <ellipse class="pet-body" cx="108" cy="152" rx="12" ry="8" />
-    <!-- 蝎子尾刺装饰 -->
-    <path class="pet-accent" d="M 150 80 Q 158 75 162 78 Q 160 82 155 82" fill="none" stroke-width="1.5" opacity="0.7" />
-  </svg>
-
-  <div id="mood-dot"></div>
-</div>
-
-<!-- 设置面板 -->
-<div id="panel">
-  <button class="close-btn" id="close-panel">✕</button>
-  <h2>⚙ 设置</h2>
-
-  <div class="section">
-    <div class="section-title">外观</div>
-    <div class="toggle-row">
-      <span>深色模式</span>
-      <div class="switch" id="theme-switch"></div>
+  <!-- 桌宠容器 -->
+  <div id="pet-container">
+    <div id="pet">
+      <div class="pet-body">
+        <div class="ear ear-left"><div class="ear-inner"></div></div>
+        <div class="ear ear-right"><div class="ear-inner"></div></div>
+        <div class="eyes">
+          <div class="eye" id="eye-left">
+            <div class="eye-pupil"></div>
+            <div class="eye-highlight"></div>
+          </div>
+          <div class="eye" id="eye-right">
+            <div class="eye-pupil"></div>
+            <div class="eye-highlight"></div>
+          </div>
+        </div>
+        <div class="nose"></div>
+        <div class="mouth"></div>
+        <div class="blush blush-left"></div>
+        <div class="blush blush-right"></div>
+        <div class="tail"></div>
+        <div class="feet">
+          <div class="foot"></div>
+          <div class="foot"></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">健康提醒</div>
-    <div class="toggle-row">
-      <span>久坐护眼</span>
-      <div class="switch on" id="eye-switch"></div>
-    </div>
-    <div class="toggle-row">
-      <span>喝水提醒</span>
-      <div class="switch on" id="water-switch"></div>
-    </div>
-    <div class="toggle-row">
-      <span>熬夜提醒</span>
-      <div class="switch on" id="sleep-switch"></div>
-    </div>
-    <div class="reminder-row">
-      <span>护眼间隔</span>
-      <input type="number" id="eye-interval" value="45" min="10" max="180"> 分钟
-    </div>
-    <div class="reminder-row">
-      <span>喝水间隔</span>
-      <input type="number" id="water-interval" value="60" min="10" max="180"> 分钟
+  <!-- 对话气泡 -->
+  <div id="speech-bubble"></div>
+
+  <!-- 控制面板 -->
+  <div id="control-panel">
+    <button id="toggle-btn">+</button>
+    <div id="menu">
+      <div class="menu-title">待办提醒</div>
+      <div class="menu-section">
+        <label>新增待办事项</label>
+        <input type="text" class="todo-input" id="todo-text" placeholder="输入待办内容...">
+        <div class="time-input">
+          <input type="number" id="todo-hour" placeholder="时" min="0" max="23">
+          <input type="number" id="todo-minute" placeholder="分" min="0" max="59">
+        </div>
+        <button class="add-btn" id="add-todo">添加提醒</button>
+      </div>
+      <div class="menu-section">
+        <label>待办列表</label>
+        <div class="todo-list" id="todo-list"></div>
+      </div>
+      <div class="stats">
+        <div>工作时长: <span id="work-time">0</span> 分钟</div>
+        <div>今日喝水: <span id="drink-count">0</span> 杯</div>
+      </div>
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">待办清单</div>
-    <div class="todo-input">
-      <input type="text" id="todo-text" placeholder="输入待办事项">
-      <input type="time" id="todo-time" value="09:00">
-      <button id="todo-add">添加</button>
-    </div>
-    <div class="todo-list" id="todo-list"></div>
-  </div>
-</div>
+  <script>
+    // ===== 核心状态 =====
+    const state = {
+      x: window.innerWidth - 150,
+      y: window.innerHeight - 150,
+      dragging: false,
+      dragOffset: { x: 0, y: 0 },
+      walking: false,
+      walkTarget: null,
+      walkDirection: 1,
+      ignoreCount: 0,      // 无视提醒次数
+      isAngry: false,       // 生气状态
+      lastActiveTime: Date.now(),
+      lastMousePos: { x: 0, y: 0 },
+      idleStartTime: Date.now(),
+      workStartTime: Date.now(),
+      drinkCount: 0,
+      todos: []
+    };
 
-<!-- 提醒弹窗 -->
-<div id="reminder-overlay">
-  <div id="reminder-box">
-    <h3 id="reminder-title">提醒</h3>
-    <p id="reminder-text"></p>
-    <button id="reminder-ok">知道了</button>
-  </div>
-</div>
-
-<script>
-(function() {
-  'use strict';
-
-  // ===== 状态 =====
-  const state = {
-    mood: 'gentle', // gentle, stubborn, cold, empathetic
-    lastInteract: Date.now(),
-    eyeTimer: 0,
-    waterTimer: 0,
-    sleepWarned: false,
-    theme: 'light',
-    settings: {
-      eye: true,
-      water: true,
-      sleep: true,
-      eyeInterval: 45,
-      waterInterval: 60
-    },
-    todos: [],
-    dragging: false,
-    dragOffset: { x: 0, y: 0 },
-    mousePos: { x: 0, y: 0 },
-    petPos: { x: 120, y: 120 },
-    blockMode: false,
-    blockTarget: null,
-    idleTime: 0
-  };
-
-  // ===== DOM =====
-  const container = document.getElementById('pet-container');
-  const svg = document.getElementById('pet-svg');
-  const bubble = document.getElementById('bubble');
-  const menuBtn = document.getElementById('menu-btn');
-  const panel = document.getElementById('panel');
-  const closePanel = document.getElementById('close-panel');
-  const reminderOverlay = document.getElementById('reminder-overlay');
-  const reminderOk = document.getElementById('reminder-ok');
-  const todoList = document.getElementById('todo-list');
-  const themeSwitch = document.getElementById('theme-switch');
-  const eyeSwitch = document.getElementById('eye-switch');
-  const waterSwitch = document.getElementById('water-switch');
-  const sleepSwitch = document.getElementById('sleep-switch');
-  const eyeIntervalInput = document.getElementById('eye-interval');
-  const waterIntervalInput = document.getElementById('water-interval');
-  const todoText = document.getElementById('todo-text');
-  const todoTime = document.getElementById('todo-time');
-  const todoAdd = document.getElementById('todo-add');
-  const moodDot = document.getElementById('mood-dot');
-
-  // ===== 台词库 =====
-  const lines = {
-    gentle: [
-      "慢慢来，你已经做得很好了。",
-      "累了就歇一会儿，我陪着你。",
-      "今天的你，温柔又有力量。",
-      "不管发生什么，我都在。",
-      "你值得被好好对待，包括被你自己。"
-    ],
-    stubborn: [
-      "别盯屏幕了，眼睛不要了？",
-      "我说了多少遍，喝水！",
-      "你再这样下去，我可要生气了。",
-      "休息不是偷懒，是负责。",
-      "听我的，现在站起来。"
-    ],
-    cold: [
-      "……随便你。",
-      "我不说了，说了也没用。",
-      "你自己看着办吧。",
-      "（沉默）",
-      "嗯。"
-    ],
-    empathetic: [
-      "我懂你的不容易，真的。",
-      "那些没说出口的话，我都听见了。",
-      "你已经很努力了，别苛责自己。",
-      "有些情绪，不需要理由。",
-      "我在这里，不需要你做什么。"
-    ]
-  };
-
-  const reminderLines = {
-    eye: {
-      gentle: "眼睛累了？闭上眼，我数到三。",
-      stubborn: "四十五分钟了！现在！立刻！看远处！",
-      cold: "眼睛快瞎了，随你便。",
-      empathetic: "你的眼睛在偷偷求救呢，让它歇会儿吧。"
-    },
-    water: {
-      gentle: "该喝水啦，小口小口地，不急。",
-      stubborn: "一小时没喝水了，杯子拿来，现在喝。",
-      cold: "渴了别找我。",
-      empathetic: "身体在提醒你要喝水了，它在爱你呢。"
-    },
-    sleep: {
-      gentle: "很晚了，去睡吧，明天我陪你。",
-      stubborn: "都几点了！睡觉！立刻！",
-      cold: "熬夜随你，反正难受的是你。",
-      empathetic: "夜深了，你的大脑也需要被温柔地关掉。"
-    },
-    todo: {
-      gentle: "到时间了，该做这件事啦。",
-      stubborn: "闹钟响了！别拖了！",
-      cold: "……时间到了。",
-      empathetic: "这件事在等你，但它不会催你，我会。"
+    // 从localStorage加载
+    const saved = localStorage.getItem('infj_pet_state');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state.drinkCount = parsed.drinkCount || 0;
+      state.todos = parsed.todos || [];
     }
-  };
 
-  // ===== 工具函数 =====
-  function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-  function showBubble(text, duration = 3500) {
-    bubble.textContent = text;
-    bubble.classList.add('show');
-    clearTimeout(state._bubbleTimer);
-    state._bubbleTimer = setTimeout(() => bubble.classList.remove('show'), duration);
-  }
-  function setMood(m) {
-    state.mood = m;
-    const colors = { gentle: '#c75b39', stubborn: '#d4a017', cold: '#888', empathetic: '#5a8a6e' };
-    moodDot.style.background = colors[m] || colors.gentle;
-  }
-  function setAnim(name) {
-    container.className = '';
-    if (name) container.classList.add('anim-' + name);
-  }
+    // ===== DOM元素 =====
+    const petContainer = document.getElementById('pet-container');
+    const speechBubble = document.getElementById('speech-bubble');
+    const petBody = document.querySelector('.pet-body');
+    const eyeLeft = document.getElementById('eye-left');
+    const eyeRight = document.getElementById('eye-right');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const menu = document.getElementById('menu');
 
-  // ===== 眨眼 =====
-  function blink() {
-    svg.classList.add('blink');
-    setTimeout(() => svg.classList.remove('blink'), 180);
-    scheduleBlink();
-  }
-  function scheduleBlink() {
-    clearTimeout(state._blinkTimer);
-    state._blinkTimer = setTimeout(blink, 2000 + Math.random() * 4000);
-  }
-  scheduleBlink();
+    // ===== 台词库 =====
+    const dialogues = {
+      gentle: [
+        "你今天很努力呢，记得对自己温柔一点。",
+        "慢慢来，每一步都算数。",
+        "我在这里陪着你。",
+        "累了的话，可以靠一靠。",
+        "你做得很好，真的。",
+        "休息一下也不会忘记前进的。",
+        "你比想象中更坚韧。",
+        "我在看着你呢，一直都在。"
+      ],
+      stubborn: [
+        "不行，必须去休息。现在。",
+        "这件事没得商量，去喝水。",
+        "你再不休息，我就挡在这里不走。",
+        "身体是你的，别任性。",
+        "我说最后一遍：去睡觉。",
+        "这不是建议，是要求。",
+        "我不接受反驳，去休息五分钟。",
+        "你可以不理我，但不能不爱自己。"
+      ],
+      cold: [
+        "...随便你吧。",
+        "你开心就好。",
+        "我没什么想说的。",
+        "...我不想看你了。",
+        "你继续，我无话可说。",
+        "算了，随你便。",
+        "嗯。"
+      ],
+      comfort: [
+        "想停下来也没关系的。",
+        "今天可以什么都不做。",
+        "你不用一直这么坚强。",
+        "累的时候，我在这里。",
+        "难过的情绪也是被允许的。",
+        "你不需要向任何人证明什么。",
+        "慢慢呼吸，我在这一起。"
+      ],
+      daily: [
+        "喝点水吧，身体会感谢你的。",
+        "眼睛累了，看看远处好不好？",
+        "该动一动了，站起来走走？",
+        "午饭时间到了，记得吃饭。",
+        "今天的阳光不错，要看看吗？"
+      ]
+    };
 
-  // ===== 拖拽 =====
-  container.addEventListener('mousedown', e => {
-    if (e.target.closest('#menu-btn')) return;
-    state.dragging = true;
-    state.dragOffset.x = e.clientX - container.offsetLeft;
-    state.dragOffset.y = e.clientY - container.offsetTop;
-    container.classList.add('dragging');
-    setAnim(null);
-  });
-  document.addEventListener('mousemove', e => {
-    state.mousePos.x = e.clientX;
-    state.mousePos.y = e.clientY;
-    if (!state.dragging) return;
-    let x = e.clientX - state.dragOffset.x;
-    let y = e.clientY - state.dragOffset.y;
-    x = Math.max(0, Math.min(window.innerWidth - 180, x));
-    y = Math.max(0, Math.min(window.innerHeight - 220, y));
-    container.style.left = x + 'px';
-    container.style.top = y + 'px';
-    state.petPos = { x, y };
-    state.blockMode = false;
-  });
-  document.addEventListener('mouseup', () => {
-    if (!state.dragging) return;
-    state.dragging = false;
-    container.classList.remove('dragging');
-    setAnim('idle');
-    state.lastInteract = Date.now();
-    setMood('gentle');
-  });
+    // ===== 工具函数 =====
+    function randomFrom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
 
-  // ===== 光标追踪 =====
-  document.addEventListener('mousemove', e => {
-    if (state.dragging) return;
-    const dx = e.clientX - (state.petPos.x + 90);
-    const dy = e.clientY - (state.petPos.y + 90);
-    const dist = Math.sqrt(dx*dx + dy*dy);
+    function saveState() {
+      localStorage.setItem('infj_pet_state', JSON.stringify({
+        drinkCount: state.drinkCount,
+        todos: state.todos
+      }));
+    }
 
-    // 瞳孔跟随
-    const maxOff = 3;
-    const angle = Math.atan2(dy, dx);
-    const offX = Math.cos(angle) * Math.min(dist / 40, maxOff);
-    const offY = Math.sin(angle) * Math.min(dist / 40, maxOff);
-    const eyes = svg.querySelectorAll('#eyes .pet-eye');
-    eyes.forEach((eye, i) => {
-      const baseCx = i === 0 ? 72 : 108;
-      const baseCy = 76;
-      eye.setAttribute('cx', baseCx + offX);
-      eye.setAttribute('cy', baseCy + offY);
+    // ===== 气泡显示 =====
+    let bubbleTimeout = null;
+    function showBubble(text, duration = 4000) {
+      if (bubbleTimeout) clearTimeout(bubbleTimeout);
+      speechBubble.textContent = text;
+      speechBubble.classList.add('show');
+
+      // 定位气泡
+      const petRect = petContainer.getBoundingClientRect();
+      const bubbleWidth = 200;
+      speechBubble.style.left = (petRect.left + petRect.width/2 - bubbleWidth/2) + 'px';
+      speechBubble.style.top = (petRect.top - 50) + 'px';
+
+      bubbleTimeout = setTimeout(() => {
+        speechBubble.classList.remove('show');
+      }, duration);
+    }
+
+    // ===== 眨眼动画 =====
+    function blink() {
+      eyeLeft.classList.add('eye-closed');
+      eyeRight.classList.add('eye-closed');
+      setTimeout(() => {
+        eyeLeft.classList.remove('eye-closed');
+        eyeRight.classList.remove('eye-closed');
+      }, 150);
+    }
+
+    // 定期眨眼
+    setInterval(() => {
+      if (!state.dragging && !state.isAngry) {
+        blink();
+      }
+    }, 3000 + Math.random() * 2000);
+
+    // ===== 拖拽功能 =====
+    petContainer.addEventListener('mousedown', (e) => {
+      state.dragging = true;
+      const rect = petContainer.getBoundingClientRect();
+      state.dragOffset.x = e.clientX - rect.left;
+      state.dragOffset.y = e.clientY - rect.top;
+      state.lastActiveTime = Date.now();
     });
 
-    // 生气时背对（不追踪）
-    if (state.mood === 'cold') {
-      eyes.forEach((eye, i) => {
-        const baseCx = i === 0 ? 72 : 108;
-        eye.setAttribute('cx', baseCx);
-        eye.setAttribute('cy', 76);
+    document.addEventListener('mousemove', (e) => {
+      // 更新鼠标位置
+      state.lastMousePos = { x: e.clientX, y: e.clientY };
+
+      if (state.dragging) {
+        state.x = e.clientX - state.dragOffset.x;
+        state.y = e.clientY - state.dragOffset.y;
+        updatePetPosition();
+      }
+    });
+
+    document.addEventListener('mouseup', (e) => {
+      if (state.dragging) {
+        state.dragging = false;
+        // 点击抚摸
+        const rect = petContainer.getBoundingClientRect();
+        if (e.clientX >= rect.left && e.clientX <= rect.right &&
+            e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          onPet();
+        }
+      }
+    });
+
+    // ===== 宠物互动 =====
+    function onPet() {
+      if (state.isAngry) {
+        showBubble(randomFrom(dialogues.cold), 3000);
+      } else {
+        showBubble(randomFrom(dialogues.gentle));
+      }
+      // 蹭光标效果
+      petBody.style.transform = 'scale(1.05)';
+      setTimeout(() => {
+        petBody.style.transform = '';
+      }, 200);
+    }
+
+    // ===== 自主导游走 =====
+    function updatePetPosition() {
+      petContainer.style.left = state.x + 'px';
+      petContainer.style.top = state.y + 'px';
+    }
+
+    function walkAround() {
+      if (state.dragging || state.walking) return;
+
+      state.walking = true;
+      petContainer.classList.add('walking');
+
+      // 随机选择目标点
+      const padding = 50;
+      state.walkTarget = {
+        x: padding + Math.random() * (window.innerWidth - 150 - padding * 2),
+        y: padding + Math.random() * (window.innerHeight - 150 - padding * 2)
+      };
+
+      walkStep();
+    }
+
+    function walkStep() {
+      if (!state.walkTarget) {
+        state.walking = false;
+        petContainer.classList.remove('walking');
+        return;
+      }
+
+      const dx = state.walkTarget.x - state.x;
+      const dy = state.walkTarget.y - state.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 10) {
+        state.walkTarget = null;
+        state.walking = false;
+        petContainer.classList.remove('walking');
+        return;
+      }
+
+      const speed = 1.5;
+      state.x += (dx / dist) * speed;
+      state.y += (dy / dist) * speed;
+      updatePetPosition();
+
+      // 翻转方向
+      if (dx > 0) {
+        petBody.style.transform = 'scaleX(-1)';
+      } else {
+        petBody.style.transform = 'scaleX(1)';
+      }
+
+      requestAnimationFrame(walkStep);
+    }
+
+    // 定期漫游
+    setInterval(() => {
+      if (!state.dragging && Math.random() < 0.3) {
+        walkAround();
+      }
+    }, 8000);
+
+    // ===== 提醒系统 =====
+    // 久坐提醒 (1小时)
+    setInterval(() => {
+      const workMinutes = Math.floor((Date.now() - state.workStartTime) / 60000);
+      document.getElementById('work-time').textContent = workMinutes;
+
+      if (workMinutes > 0 && workMinutes % 60 === 0 && workMinutes > 0) {
+        showBubble(randomFrom(dialogues.stubborn));
+        state.ignoreCount++;
+      }
+    }, 60000);
+
+    // 喝水提醒 (每2小时)
+    setInterval(() => {
+      showBubble(randomFrom(dialogues.daily));
+    }, 2 * 60 * 60 * 1000);
+
+    // 熬夜检测
+    setInterval(() => {
+      const hour = new Date().getHours();
+      if (hour >= 23 || hour < 6) {
+        if (Math.random() < 0.5) {
+          showBubble(randomFrom(dialogues.stubborn));
+          state.ignoreCount++;
+
+          if (state.ignoreCount >= 3 && !state.isAngry) {
+            state.isAngry = true;
+            petBody.classList.add('angry');
+            showBubble("你再这样，我真的不理你了。", 5000);
+          }
+        }
+      }
+    }, 10 * 60 * 1000);
+
+    // 空闲检测
+    setInterval(() => {
+      const idleTime = Date.now() - state.lastActiveTime;
+      const mouseIdleTime = Date.now() - state.idleStartTime;
+
+      // 光标长时间不动
+      if (mouseIdleTime > 10 * 60 * 1000) {
+        showBubble(randomFrom(dialogues.comfort));
+        state.idleStartTime = Date.now();
+      }
+    }, 60000);
+
+    // 记录鼠标活动
+    let lastMoveTime = Date.now();
+    document.addEventListener('mousemove', () => {
+      const now = Date.now();
+      if (now - lastMoveTime > 10 * 60 * 1000) {
+        // 恢复活跃状态
+        if (state.isAngry) {
+          state.isAngry = false;
+          petBody.classList.remove('angry');
+          state.ignoreCount = 0;
+        }
+      }
+      lastMoveTime = now;
+      state.idleStartTime = now;
+    });
+
+    // ===== 待办系统 =====
+    function renderTodos() {
+      const list = document.getElementById('todo-list');
+      list.innerHTML = state.todos.map((todo, i) => `
+        <div class="todo-item">
+          <span>${todo.text} (${todo.hour}:${String(todo.minute).padStart(2,'0')})</span>
+          <button class="todo-delete" data-index="${i}">×</button>
+        </div>
+      `).join('');
+
+      list.querySelectorAll('.todo-delete').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const index = parseInt(btn.dataset.index);
+          state.todos.splice(index, 1);
+          saveState();
+          renderTodos();
+        });
       });
     }
-  });
 
-  // ===== 点击互动 =====
-  container.addEventListener('click', e => {
-    if (e.target.closest('#menu-btn')) return;
-    state.lastInteract = Date.now();
+    document.getElementById('add-todo').addEventListener('click', () => {
+      const text = document.getElementById('todo-text').value.trim();
+      const hour = parseInt(document.getElementById('todo-hour').value) || 0;
+      const minute = parseInt(document.getElementById('todo-minute').value) || 0;
 
-    if (state.mood === 'cold') {
-      showBubble(rand(lines.cold), 2500);
-      setAnim('angry');
-      setTimeout(() => { if (!state.dragging) setAnim('idle'); }, 2000);
-      return;
-    }
-
-    // 随机互动
-    const r = Math.random();
-    if (r < 0.4) {
-      setMood('gentle');
-      setAnim('gentle');
-      showBubble(rand(lines.gentle));
-    } else if (r < 0.7) {
-      setMood('empathetic');
-      setAnim('attention');
-      showBubble(rand(lines.empathetic));
-    } else {
-      setMood('stubborn');
-      setAnim('attention');
-      showBubble(rand(lines.stubborn));
-    }
-    setTimeout(() => { if (!state.dragging) setAnim('idle'); }, 3000);
-  });
-
-  // ===== 菜单 =====
-  menuBtn.addEventListener('click', () => panel.classList.add('open'));
-  closePanel.addEventListener('click', () => panel.classList.remove('open'));
-  reminderOk.addEventListener('click', () => reminderOverlay.classList.remove('show'));
-
-  // ===== 开关 =====
-  function toggleSwitch(el, key) {
-    el.classList.toggle('on');
-    state.settings[key] = el.classList.contains('on');
-  }
-  themeSwitch.addEventListener('click', () => {
-    themeSwitch.classList.toggle('on');
-    const dark = themeSwitch.classList.contains('on');
-    state.theme = dark ? 'dark' : 'light';
-    document.body.setAttribute('data-theme', state.theme);
-  });
-  eyeSwitch.addEventListener('click', () => toggleSwitch(eyeSwitch, 'eye'));
-  waterSwitch.addEventListener('click', () => toggleSwitch(waterSwitch, 'water'));
-  sleepSwitch.addEventListener('click', () => toggleSwitch(sleepSwitch, 'sleep'));
-
-  eyeIntervalInput.addEventListener('change', () => {
-    state.settings.eyeInterval = parseInt(eyeIntervalInput.value) || 45;
-  });
-  waterIntervalInput.addEventListener('change', () => {
-    state.settings.waterInterval = parseInt(waterIntervalInput.value) || 60;
-  });
-
-  // ===== 待办 =====
-  function renderTodos() {
-    todoList.innerHTML = '';
-    state.todos.forEach((t, i) => {
-      const div = document.createElement('div');
-      div.className = 'todo-item';
-      div.innerHTML = `<span><span class="time">${t.time}</span>${t.text}</span><button class="del" data-i="${i}">✕</button>`;
-      todoList.appendChild(div);
-    });
-    todoList.querySelectorAll('.del').forEach(btn => {
-      btn.addEventListener('click', () => {
-        state.todos.splice(parseInt(btn.dataset.i), 1);
+      if (text) {
+        state.todos.push({ text, hour, minute });
+        saveState();
         renderTodos();
-      });
+
+        // 清空输入
+        document.getElementById('todo-text').value = '';
+        document.getElementById('todo-hour').value = '';
+        document.getElementById('todo-minute').value = '';
+
+        showBubble("好的，我会提醒你的。");
+      }
     });
-  }
-  todoAdd.addEventListener('click', () => {
-    const text = todoText.value.trim();
-    const time = todoTime.value;
-    if (!text) return;
-    state.todos.push({ text, time, done: false });
-    todoText.value = '';
+
+    // 待办检查
+    setInterval(() => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+
+      state.todos.forEach((todo, index) => {
+        if (todo.hour === currentHour && todo.minute === currentMinute && !todo.notified) {
+          todo.notified = true;
+          showBubble(`待办提醒: ${todo.text}`, 6000);
+          state.ignoreCount++;
+        }
+      });
+    }, 30000);
+
+    // ===== 控制面板 =====
+    toggleBtn.addEventListener('click', () => {
+      menu.classList.toggle('show');
+      toggleBtn.textContent = menu.classList.contains('show') ? '×' : '+';
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!toggleBtn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.remove('show');
+        toggleBtn.textContent = '+';
+      }
+    });
+
+    // ===== 初始化 =====
+    updatePetPosition();
     renderTodos();
-  });
-  todoText.addEventListener('keydown', e => { if (e.key === 'Enter') todoAdd.click(); });
+    document.getElementById('drink-count').textContent = state.drinkCount;
 
-  // ===== 提醒系统 =====
-  function showReminder(type, customText) {
-    const titleEl = document.getElementById('reminder-title');
-    const textEl = document.getElementById('reminder-text');
-    const titles = { eye: '护眼提醒', water: '喝水提醒', sleep: '熬夜提醒', todo: '待办提醒' };
-    titleEl.textContent = titles[type] || '提醒';
-    if (customText) {
-      textEl.textContent = customText;
-    } else {
-      textEl.textContent = reminderLines[type][state.mood] || reminderLines[type].gentle;
-    }
-    reminderOverlay.classList.add('show');
+    // 开场白
+    setTimeout(() => {
+      showBubble("主人,你来啦。", 3000);
+    }, 1000);
 
-    // 弹窗时宠物反应
-    if (state.mood === 'cold') {
-      setAnim('angry');
-    } else if (state.mood === 'stubborn') {
-      setAnim('block');
-    } else {
-      setAnim('attention');
-    }
-    setTimeout(() => { if (!state.dragging) setAnim('idle'); }, 4000);
-  }
-
-  // 计时器循环
-  let lastTick = Date.now();
-  setInterval(() => {
-    const now = Date.now();
-    const dt = (now - lastTick) / 1000;
-    lastTick = now;
-
-    // 护眼计时
-    if (state.settings.eye) {
-      state.eyeTimer += dt;
-      if (state.eyeTimer >= state.settings.eyeInterval * 60) {
-        state.eyeTimer = 0;
-        setMood('stubborn');
-        showReminder('eye');
-      }
-    }
-
-    // 喝水计时
-    if (state.settings.water) {
-      state.waterTimer += dt;
-      if (state.waterTimer >= state.settings.waterInterval * 60) {
-        state.waterTimer = 0;
-        setMood('stubborn');
-        showReminder('water');
-      }
-    }
-
-    // 熬夜检测 (23:00 后)
-    const h = new Date().getHours();
-    if (state.settings.sleep && h >= 23 && !state.sleepWarned) {
-      state.sleepWarned = true;
-      setMood('stubborn');
-      showReminder('sleep');
-    }
-    if (h < 23) state.sleepWarned = false;
-
-    // 待办检测
-    const nowStr = ('0' + h).slice(-2) + ':' + ('0' + new Date().getMinutes()).slice(-2);
-    state.todos.forEach((t, i) => {
-      if (!t.done && t.time === nowStr) {
-        t.done = true;
-        setMood('stubborn');
-        showReminder('todo', `「${t.text}」到时间了。`);
-        renderTodos();
+    // 喝水计数 (点击消息确认)
+    speechBubble.addEventListener('click', () => {
+      if (speechBubble.textContent.includes('喝水') || speechBubble.textContent.includes('水')) {
+        state.drinkCount++;
+        document.getElementById('drink-count').textContent = state.drinkCount;
+        saveState();
       }
     });
 
-    // 情绪衰减
-    state.idleTime += dt;
-    if (state.idleTime > 300) { // 5分钟无互动变冷淡
-      if (state.mood !== 'cold') {
-        setMood('cold');
-        setAnim('angry');
-        showBubble(rand(lines.cold), 3000);
-      }
-    }
-
-    // 长时间不动时偶尔说话
-    if (state.idleTime > 60 && Math.random() < 0.003) {
-      const pool = state.mood === 'cold' ? lines.cold :
-                   state.mood === 'stubborn' ? lines.stubborn :
-                   state.mood === 'empathetic' ? lines.empathetic : lines.gentle;
-      showBubble(rand(pool));
-    }
-
-  }, 1000);
-
-  // 重置idle
-  document.addEventListener('mousemove', () => {
-    if (state.idleTime > 300 && state.mood === 'cold') {
-      setMood('gentle');
-      setAnim('gentle');
-      showBubble("……你回来了。");
-      setTimeout(() => { if (!state.dragging) setAnim('idle'); }, 3000);
-    }
-    state.idleTime = 0;
-  });
-  document.addEventListener('keydown', () => { state.idleTime = 0; });
-  document.addEventListener('click', () => { state.idleTime = 0; });
-
-  // ===== 初始化 =====
-  setAnim('idle');
-  setMood('gentle');
-  showBubble("嗨，我是你的天蝎INFJ桌宠。");
-
-  // 检测系统深色模式
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    themeSwitch.classList.add('on');
-    document.body.setAttribute('data-theme', 'dark');
-    state.theme = 'dark';
-  }
-
-})();
-</script>
+    // 窗口resize处理
+    window.addEventListener('resize', () => {
+      // 确保宠物不超出屏幕
+      state.x = Math.min(state.x, window.innerWidth - 120);
+      state.y = Math.min(state.y, window.innerHeight - 120);
+      updatePetPosition();
+    });
+  </script>
 </body>
 </html>
